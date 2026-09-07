@@ -229,6 +229,7 @@ class GeminiDriver extends AbstractDriver
 
             if ($role === Role::TOOL) {
                 $rawMsg = $msg->toArray();
+                $decodedContent = is_string($content) ? (json_decode($content, true) ?? ['result' => $content]) : $content;
                 $contents[] = [
                     'role'  => 'user',
                     'parts' => [
@@ -237,7 +238,7 @@ class GeminiDriver extends AbstractDriver
                                 'name'     => $rawMsg['name'] ?? 'tool_result',
                                 'response' => [
                                     'name'    => $rawMsg['name'] ?? 'tool_result',
-                                    'content' => $content,
+                                    'content' => $decodedContent,
                                 ],
                             ],
                         ],
@@ -246,9 +247,42 @@ class GeminiDriver extends AbstractDriver
                 continue;
             }
 
-            $geminiRole = $role === Role::ASSISTANT ? 'model' : 'user';
+            if ($role === Role::ASSISTANT) {
+                $rawMsg = $msg->toArray();
+                $parts = [];
+
+                if (!empty($content)) {
+                    $parts[] = ['text' => is_array($content) ? json_encode($content) : (string) $content];
+                }
+
+                if (!empty($rawMsg['tool_calls'])) {
+                    foreach ($rawMsg['tool_calls'] as $tc) {
+                        $name = $tc['function']['name'] ?? $tc['name'] ?? '';
+                        $argsRaw = $tc['function']['arguments'] ?? $tc['arguments'] ?? [];
+                        $args = is_string($argsRaw) ? (json_decode($argsRaw, true) ?? []) : (array) $argsRaw;
+
+                        $parts[] = [
+                            'functionCall' => [
+                                'name' => $name,
+                                'args' => (object) $args,
+                            ],
+                        ];
+                    }
+                }
+
+                if (empty($parts)) {
+                    $parts[] = ['text' => ''];
+                }
+
+                $contents[] = [
+                    'role'  => 'model',
+                    'parts' => $parts,
+                ];
+                continue;
+            }
+
             $contents[] = [
-                'role'  => $geminiRole,
+                'role'  => 'user',
                 'parts' => [
                     ['text' => is_array($content) ? json_encode($content) : (string) $content],
                 ],

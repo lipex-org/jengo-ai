@@ -195,8 +195,42 @@ class AnthropicDriver extends AbstractDriver
                 continue;
             }
 
+            if ($role === Role::ASSISTANT) {
+                $rawMsg = $msg->toArray();
+                $contentBlocks = [];
+
+                if (!empty($content)) {
+                    $contentBlocks[] = [
+                        'type' => 'text',
+                        'text' => is_array($content) ? json_encode($content) : (string) $content,
+                    ];
+                }
+
+                if (!empty($rawMsg['tool_calls'])) {
+                    foreach ($rawMsg['tool_calls'] as $tc) {
+                        $id = (string) ($tc['id'] ?? uniqid('toolu_'));
+                        $name = (string) ($tc['function']['name'] ?? $tc['name'] ?? '');
+                        $argsRaw = $tc['function']['arguments'] ?? $tc['arguments'] ?? [];
+                        $args = is_string($argsRaw) ? (json_decode($argsRaw, true) ?? []) : (array) $argsRaw;
+
+                        $contentBlocks[] = [
+                            'type'  => 'tool_use',
+                            'id'    => $id,
+                            'name'  => $name,
+                            'input' => $args,
+                        ];
+                    }
+                }
+
+                $messages[] = [
+                    'role'    => 'assistant',
+                    'content' => !empty($contentBlocks) ? $contentBlocks : (is_array($content) ? json_encode($content) : (string) $content),
+                ];
+                continue;
+            }
+
             $messages[] = [
-                'role'    => $role === Role::ASSISTANT ? 'assistant' : 'user',
+                'role'    => 'user',
                 'content' => $content,
             ];
         }
