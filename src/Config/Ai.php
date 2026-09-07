@@ -78,24 +78,56 @@ class Ai extends BaseConfig
     {
         parent::__construct();
 
-        // Populate credentials from environment variables if set
-        if (isset($_ENV['OPENAI_API_KEY']) || isset($_SERVER['OPENAI_API_KEY'])) {
-            $this->providers['openai']['key'] = (string) ($_ENV['OPENAI_API_KEY'] ?? $_SERVER['OPENAI_API_KEY']);
+        // Support CodeIgniter 4's standard dot-notation environment overrides (.env)
+        // e.g., ai.providers.openai.key, ai.providers.gemini.model, ai.defaults.temperature
+        $envVars = array_merge($_SERVER, $_ENV);
+        foreach ($envVars as $key => $value) {
+            $lowerKey = strtolower((string) $key);
+            if (!str_starts_with($lowerKey, 'ai.')) {
+                continue;
+            }
+
+            $parts = explode('.', $lowerKey);
+
+            // ai.providers.<provider>.<key>
+            if (count($parts) === 4 && $parts[1] === 'providers') {
+                $provider = $parts[2];
+                $configKey = $parts[3];
+                $this->providers[$provider][$configKey] = $this->castEnvValue($value);
+            }
+            // ai.defaults.<key>
+            elseif (count($parts) === 3 && $parts[1] === 'defaults') {
+                $defaultKey = $parts[2];
+                $this->defaults[$defaultKey] = $this->castEnvValue($value);
+            }
         }
-        if (isset($_ENV['ANTHROPIC_API_KEY']) || isset($_SERVER['ANTHROPIC_API_KEY'])) {
-            $this->providers['anthropic']['key'] = (string) ($_ENV['ANTHROPIC_API_KEY'] ?? $_SERVER['ANTHROPIC_API_KEY']);
+    }
+
+    protected function castEnvValue(mixed $value): mixed
+    {
+        if (!is_string($value)) {
+            return $value;
         }
-        if (isset($_ENV['GEMINI_API_KEY']) || isset($_SERVER['GEMINI_API_KEY'])) {
-            $this->providers['gemini']['key'] = (string) ($_ENV['GEMINI_API_KEY'] ?? $_SERVER['GEMINI_API_KEY']);
+
+        $trimmed = trim($value);
+        $lower = strtolower($trimmed);
+
+        if ($lower === 'true' || $lower === '(true)') {
+            return true;
         }
-        if (isset($_ENV['DEEPSEEK_API_KEY']) || isset($_SERVER['DEEPSEEK_API_KEY'])) {
-            $this->providers['deepseek']['key'] = (string) ($_ENV['DEEPSEEK_API_KEY'] ?? $_SERVER['DEEPSEEK_API_KEY']);
+        if ($lower === 'false' || $lower === '(false)') {
+            return false;
         }
-        if (isset($_ENV['GROQ_API_KEY']) || isset($_SERVER['GROQ_API_KEY'])) {
-            $this->providers['groq']['key'] = (string) ($_ENV['GROQ_API_KEY'] ?? $_SERVER['GROQ_API_KEY']);
+        if ($lower === 'null' || $lower === '(null)') {
+            return null;
         }
-        if (isset($_ENV['OLLAMA_BASE_URL']) || isset($_SERVER['OLLAMA_BASE_URL'])) {
-            $this->providers['ollama']['base_url'] = (string) ($_ENV['OLLAMA_BASE_URL'] ?? $_SERVER['OLLAMA_BASE_URL']);
+        if ($lower === 'empty' || $lower === '(empty)') {
+            return '';
         }
+        if (is_numeric($trimmed)) {
+            return str_contains($trimmed, '.') ? (float) $trimmed : (int) $trimmed;
+        }
+
+        return $trimmed;
     }
 }

@@ -75,4 +75,19 @@ class DriversTest extends TestCase
 
         $this->assertSame($fake, $driver->getFake());
     }
+
+    public function testDotNotationEnvLoading(): void
+    {
+        $_ENV['ai.providers.openai.key'] = 'sk-test-dot-notation';
+        $_ENV['ai.providers.openai.model'] = 'gpt-4o-custom';
+        $_ENV['ai.defaults.temperature'] = '0.35';
+
+        $config = new AiConfig();
+
+        $this->assertSame('sk-test-dot-notation', $config->providers['openai']['key']);
+        $this->assertSame('gpt-4o-custom', $config->providers['openai']['model']);
+        $this->assertSame(0.35, $config->defaults['temperature']);
+
+        unset($_ENV['ai.providers.openai.key'], $_ENV['ai.providers.openai.model'], $_ENV['ai.defaults.temperature']);
+    }
 }

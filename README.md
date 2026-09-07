@@ -42,23 +42,41 @@ This publishes `app/Config/Ai.php`.
 
 ## ⚙️ Configuration
 
-Configure your API keys in your `.env` file:
+Configure your AI settings and API credentials in your `.env` file using standard CodeIgniter 4 dot notation:
 
 ```dotenv
-# Provider API Keys
-OPENAI_API_KEY=sk-...
-OPENAI_ORG_ID=org-...
+# Default Provider Driver ('openai', 'anthropic', 'gemini', 'deepseek', 'groq', 'ollama')
+ai.default = 'openai'
 
-ANTHROPIC_API_KEY=sk-ant-...
+# OpenAI Configuration
+ai.providers.openai.key = 'sk-...'
+ai.providers.openai.organization = 'org-...'
+ai.providers.openai.model = 'gpt-4o-mini'
 
-GEMINI_API_KEY=AIzaSy...
+# Anthropic Claude Configuration
+ai.providers.anthropic.key = 'sk-ant-...'
+ai.providers.anthropic.model = 'claude-3-5-sonnet-20241022'
 
-DEEPSEEK_API_KEY=sk-...
+# Google Gemini Configuration
+ai.providers.gemini.key = 'AIzaSy...'
+ai.providers.gemini.model = 'gemini-2.0-flash'
 
-GROQ_API_KEY=gsk_...
+# DeepSeek Configuration
+ai.providers.deepseek.key = 'sk-...'
+ai.providers.deepseek.model = 'deepseek-chat'
 
-# Local Ollama URL
-OLLAMA_BASE_URL=http://localhost:11434
+# Groq Configuration
+ai.providers.groq.key = 'gsk_...'
+ai.providers.groq.model = 'llama-3.3-70b-versatile'
+
+# Ollama Local Configuration
+ai.providers.ollama.base_url = 'http://localhost:11434'
+ai.providers.ollama.model = 'llama3.2'
+
+# Global Generation Defaults
+ai.defaults.temperature = 0.7
+ai.defaults.max_tokens = 2048
+ai.defaults.max_steps = 5
 ```
 
 ---
