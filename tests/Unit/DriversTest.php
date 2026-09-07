@@ -39,6 +39,9 @@ class DriversTest extends TestCase
         $groq = $client->driver('groq');
         $this->assertInstanceOf(GroqDriver::class, $groq);
 
+        $openrouter = $client->driver('openrouter');
+        $this->assertInstanceOf(\Jengo\Ai\Drivers\OpenRouterDriver::class, $openrouter);
+
         $ollama = $client->driver('ollama');
         $this->assertInstanceOf(OllamaDriver::class, $ollama);
     }

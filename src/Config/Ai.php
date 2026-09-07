@@ -9,7 +9,7 @@ use CodeIgniter\Config\BaseConfig;
 class Ai extends BaseConfig
 {
     /**
-     * Default AI Provider Driver ('openai', 'anthropic', 'gemini', 'deepseek', 'groq', 'ollama').
+     * Default AI Provider Driver ('openai', 'anthropic', 'gemini', 'deepseek', 'groq', 'openrouter', 'ollama').
      */
     public string $default = 'openai';
 
@@ -54,6 +54,15 @@ class Ai extends BaseConfig
             'base_url' => 'https://api.groq.com/openai/v1',
             'timeout'  => 15,
             'retry'    => 2,
+        ],
+        'openrouter' => [
+            'key'       => '',
+            'model'     => 'openai/gpt-4o-mini',
+            'base_url'  => 'https://openrouter.ai/api/v1',
+            'site_url'  => '',
+            'site_name' => 'Jengo AI',
+            'timeout'   => 60,
+            'retry'     => 2,
         ],
         'ollama' => [
             'base_url' => 'http://localhost:11434',

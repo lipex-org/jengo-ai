@@ -15,6 +15,7 @@ use Jengo\Ai\Drivers\GeminiDriver;
 use Jengo\Ai\Drivers\GroqDriver;
 use Jengo\Ai\Drivers\OllamaDriver;
 use Jengo\Ai\Drivers\OpenAiDriver;
+use Jengo\Ai\Drivers\OpenRouterDriver;
 use Jengo\Ai\Exceptions\DriverException;
 use Jengo\Ai\Support\VectorMath;
 use Jengo\Ai\Testing\AiFake;
@@ -185,9 +186,10 @@ class AiClient
             'openai'    => new OpenAiDriver($providerConfig),
             'anthropic' => new AnthropicDriver($providerConfig),
             'gemini'    => new GeminiDriver($providerConfig),
-            'deepseek'  => new DeepSeekDriver($providerConfig),
-            'groq'      => new GroqDriver($providerConfig),
-            'ollama'    => new OllamaDriver($providerConfig),
+            'deepseek'   => new DeepSeekDriver($providerConfig),
+            'groq'       => new GroqDriver($providerConfig),
+            'openrouter' => new OpenRouterDriver($providerConfig),
+            'ollama'     => new OllamaDriver($providerConfig),
             'fake'      => new FakeDriver($this->fake ?? new AiFake()),
             default     => throw DriverException::unsupported("Unsupported AI driver: [{$name}]."),
         };

@@ -30,6 +30,7 @@ class ResponsesAndMessagesTest extends TestCase
         $this->assertSame('gemini', Provider::GEMINI->value);
         $this->assertSame('deepseek', Provider::DEEPSEEK->value);
         $this->assertSame('groq', Provider::GROQ->value);
+        $this->assertSame('openrouter', Provider::OPENROUTER->value);
         $this->assertSame('ollama', Provider::OLLAMA->value);
         $this->assertSame('fake', Provider::FAKE->value);
 

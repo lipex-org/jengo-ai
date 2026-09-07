@@ -12,7 +12,7 @@ A unified, multi-provider AI SDK and Agentic Engine for **CodeIgniter 4** and th
 
 ## 🌟 Key Capabilities
 
-- 🤖 **Multi-Provider Drivers**: Seamlessly switch between **OpenAI**, **Anthropic Claude**, **Google Gemini**, **DeepSeek**, **Groq**, and **Ollama (Local Self-Hosted)**.
+- 🤖 **Multi-Provider Drivers**: Seamlessly switch between **OpenAI**, **Anthropic Claude**, **Google Gemini**, **DeepSeek**, **Groq**, **OpenRouter (300+ models gateway)**, and **Ollama (Local Self-Hosted)**.
 - 📐 **Schema-First Structured Outputs**: Enforce strict JSON output schemas and hydrate directly into validated PHP associative arrays or objects (`->schema([...])->asArray()`).
 - 🛠️ **Tool Calling & Agentic Execution Loops**: Let LLMs call PHP methods, database queries, and business logic with built-in multi-step autonomous execution loops (`->maxSteps(5)`).
 - 🏷️ **PHP 8 `#[AiTool]` Attribute Auto-Discovery**: Automatically convert any PHP service class into LLM tools via attributes.
@@ -46,7 +46,7 @@ This publishes `app/Config/Ai.php`.
 Configure your AI settings and API credentials in your `.env` file using standard CodeIgniter 4 dot notation:
 
 ```dotenv
-# Default Provider Driver ('openai', 'anthropic', 'gemini', 'deepseek', 'groq', 'ollama')
+# Default Provider Driver ('openai', 'anthropic', 'gemini', 'deepseek', 'groq', 'openrouter', 'ollama')
 ai.default = 'openai'
 
 # OpenAI Configuration
@@ -69,6 +69,12 @@ ai.providers.deepseek.model = 'deepseek-chat'
 # Groq Configuration
 ai.providers.groq.key = 'gsk_...'
 ai.providers.groq.model = 'llama-3.3-70b-versatile'
+
+# OpenRouter (Unified 300+ Model Gateway)
+ai.providers.openrouter.key = 'sk-or-...'
+ai.providers.openrouter.model = 'meta-llama/llama-3.3-70b-instruct'
+ai.providers.openrouter.site_url = 'https://myapp.com'
+ai.providers.openrouter.site_name = 'My CI4 App'
 
 # Ollama Local Configuration
 ai.providers.ollama.base_url = 'http://localhost:11434'
@@ -132,6 +138,12 @@ $math = Ai::driver('deepseek')
 $fast = Ai::driver('groq')
     ->model('llama-3.3-70b-versatile')
     ->prompt('Summarize the text...')
+    ->text();
+
+// OpenRouter Gateway (Access 300+ models with 1 key)
+$routed = Ai::driver('openrouter')
+    ->model('meta-llama/llama-3.3-70b-instruct')
+    ->prompt('Analyze market trends: ...')
     ->text();
 
 // Local Ollama (Offline, zero cost)

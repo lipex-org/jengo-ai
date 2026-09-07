@@ -11,6 +11,7 @@ enum Provider: string
     case GEMINI = 'gemini';
     case DEEPSEEK = 'deepseek';
     case GROQ = 'groq';
+    case OPENROUTER = 'openrouter';
     case MISTRAL = 'mistral';
     case OLLAMA = 'ollama';
     case FAKE = 'fake';
@@ -18,14 +19,15 @@ enum Provider: string
     public function label(): string
     {
         return match ($this) {
-            self::OPENAI => 'OpenAI',
-            self::ANTHROPIC => 'Anthropic Claude',
-            self::GEMINI => 'Google Gemini',
-            self::DEEPSEEK => 'DeepSeek',
-            self::GROQ => 'Groq',
-            self::MISTRAL => 'Mistral AI',
-            self::OLLAMA => 'Ollama (Local)',
-            self::FAKE => 'In-Memory Testing Fake',
+            self::OPENAI     => 'OpenAI',
+            self::ANTHROPIC  => 'Anthropic Claude',
+            self::GEMINI     => 'Google Gemini',
+            self::DEEPSEEK   => 'DeepSeek',
+            self::GROQ       => 'Groq',
+            self::OPENROUTER => 'OpenRouter',
+            self::MISTRAL    => 'Mistral AI',
+            self::OLLAMA     => 'Ollama (Local)',
+            self::FAKE       => 'In-Memory Testing Fake',
         };
     }
 }

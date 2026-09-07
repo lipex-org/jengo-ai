@@ -47,6 +47,12 @@
       "description": "Groq LPU ultra-fast inference driver for Llama 3.3 70B and Mixtral models."
     },
     {
+      "name": "openrouter",
+      "class": "Jengo\\Ai\\Drivers\\OpenRouterDriver",
+      "default_model": "openai/gpt-4o-mini",
+      "description": "OpenRouter driver providing unified access to 300+ AI models across OpenAI, Anthropic, Google, Meta, DeepSeek, Mistral, and Cohere with site ranking headers."
+    },
+    {
       "name": "ollama",
       "class": "Jengo\\Ai\\Drivers\\OllamaDriver",
       "default_model": "llama3.2",
@@ -69,6 +75,8 @@
       "ai.providers.gemini.key = 'AIzaSy...'",
       "ai.providers.deepseek.key = 'sk-...'",
       "ai.providers.groq.key = 'gsk_...'",
+      "ai.providers.openrouter.key = 'sk-or-...'",
+      "ai.providers.openrouter.model = 'meta-llama/llama-3.3-70b-instruct'",
       "ai.providers.ollama.base_url = 'http://localhost:11434'",
       "ai.defaults.temperature = 0.7",
       "ai.defaults.max_tokens = 2048",
