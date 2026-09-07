@@ -1,0 +1,126 @@
+{
+  "name": "jengo/ai",
+  "description": "Unified, multi-provider AI SDK and Agentic Engine for CodeIgniter 4 and the Jengo Framework.",
+  "version": "1.0.0",
+  "facade": {
+    "class": "Jengo\\Ai\\Ai",
+    "description": "Primary static entry point providing fluent AI prompt execution, multi-turn chat, driver switching, model overrides, vector embeddings, structured schema parsing, real-time streaming, and testing fakes."
+  },
+  "client": {
+    "class": "Jengo\\Ai\\AiClient",
+    "service": "service('ai')",
+    "description": "Core client manager and driver registry coordinator."
+  },
+  "request_builder": {
+    "class": "Jengo\\Ai\\AiRequest",
+    "description": "Fluent request builder with autonomous tool execution loop, schema enforcement, and streaming support."
+  },
+  "drivers": [
+    {
+      "name": "openai",
+      "class": "Jengo\\Ai\\Drivers\\OpenAiDriver",
+      "description": "OpenAI driver supporting GPT-4o, GPT-4o-mini, o1, o3-mini, structured JSON outputs, tool calling, streaming, and vector embeddings."
+    },
+    {
+      "name": "anthropic",
+      "class": "Jengo\\Ai\\Drivers\\AnthropicDriver",
+      "description": "Anthropic Claude driver supporting Claude 3.5 Sonnet, Claude 3.5 Haiku, multi-turn conversations, tool calling, and token streaming."
+    },
+    {
+      "name": "gemini",
+      "class": "Jengo\\Ai\\Drivers\\GeminiDriver",
+      "description": "Google Gemini driver supporting Gemini 2.0 Flash, Gemini 1.5 Pro, structured JSON responses, tools, streaming, and text-embedding-004."
+    },
+    {
+      "name": "deepseek",
+      "class": "Jengo\\Ai\\Drivers\\DeepSeekDriver",
+      "description": "DeepSeek driver supporting DeepSeek V3 and DeepSeek R1 reasoning models with OpenAI-compatible API protocol."
+    },
+    {
+      "name": "groq",
+      "class": "Jengo\\Ai\\Drivers\\GroqDriver",
+      "description": "Groq LPU ultra-fast inference driver for Llama 3.3 70B and Mixtral models."
+    },
+    {
+      "name": "ollama",
+      "class": "Jengo\\Ai\\Drivers\\OllamaDriver",
+      "description": "Local self-hosted LLM driver for Ollama (Llama 3.2, Mistral, Qwen, DeepSeek-R1, Nomic Embed)."
+    },
+    {
+      "name": "fake",
+      "class": "Jengo\\Ai\\Drivers\\FakeDriver",
+      "description": "In-memory test double driver that intercepts all generation, streaming, and embedding calls for zero-cost testing."
+    }
+  ],
+  "tool_calling": {
+    "tool_class": "Jengo\\Ai\\Support\\Tool",
+    "tool_call_class": "Jengo\\Ai\\Support\\ToolCall",
+    "attribute_discovery": {
+      "tool_attribute": "Jengo\\Ai\\Attributes\\AiTool",
+      "parameter_attribute": "Jengo\\Ai\\Attributes\\AiParameter",
+      "discovery_method": "$request->withToolsFrom(object|string $target)"
+    },
+    "agentic_loop": {
+      "setting": "$request->maxSteps(int $maxSteps = 5)",
+      "description": "Autonomous multi-step loop executing tool calls and feeding results back to the LLM until completion."
+    }
+  },
+  "structured_outputs": {
+    "builder": "Jengo\\Ai\\Schema\\SchemaBuilder",
+    "extractor": "Jengo\\Ai\\Schema\\StructuredOutput",
+    "methods": [
+      "$request->schema(array $schema)",
+      "$response->asArray(): array",
+      "$response->asObject(): object"
+    ]
+  },
+  "realtime_streaming": {
+    "response_class": "Jengo\\Ai\\Responses\\StreamResponse",
+    "sse_method": "$stream->toSseResponse(): CodeIgniter\\HTTP\\ResponseInterface",
+    "callback_method": "$stream->each(callable $callback): string"
+  },
+  "embeddings_and_rag": {
+    "response_class": "Jengo\\Ai\\Responses\\EmbeddingResponse",
+    "math_utilities": "Jengo\\Ai\\Support\\VectorMath",
+    "methods": [
+      "Ai::embed(string $text, ?string $model = null): array",
+      "Ai::embedMany(array $texts, ?string $model = null): array",
+      "Ai::similarity(array $a, array $b): float",
+      "VectorMath::cosineSimilarity(array $a, array $b): float",
+      "VectorMath::dotProduct(array $a, array $b): float",
+      "VectorMath::euclideanDistance(array $a, array $b): float",
+      "VectorMath::topK(array $queryVector, array $candidates, int $k = 5): array",
+      "VectorMath::chunkText(string $text, int $chunkSize = 1000, int $overlap = 100): array"
+    ]
+  },
+  "testing": {
+    "fake_class": "Jengo\\Ai\\Testing\\AiFake",
+    "activation": "Ai::fake(mixed $responses = null): Jengo\\Ai\\Testing\\AiFake",
+    "sequence_activation": "Ai::fakeSequence(): Jengo\\Ai\\Testing\\AiFake",
+    "trait": "Jengo\\Ai\\Testing\\Concerns\\AiTestAssertionsTrait",
+    "assertions": [
+      "$fake->assertPromptSent(string|callable $prompt): self",
+      "$fake->assertPromptNotSent(string|callable $prompt): self",
+      "$fake->assertModel(string $model): self",
+      "$fake->assertDriver(string $driver): self",
+      "$fake->assertToolCalled(string $toolName, ?callable $callback = null): self",
+      "$fake->assertToolNotCalled(string $toolName): self",
+      "$fake->assertCount(int $expectedCount): self",
+      "$fake->assertNothingSent(): self"
+    ]
+  },
+  "helpers": [
+    {
+      "name": "ai",
+      "signature": "ai(string|array|null $prompt = null): Jengo\\Ai\\AiRequest|Jengo\\Ai\\AiClient",
+      "description": "Fluent helper to start an AI prompt, multi-turn chat, or get the AiClient coordinator."
+    }
+  ],
+  "installers": [
+    {
+      "class": "Jengo\\Ai\\Installers\\AiInstaller",
+      "command": "php spark jengo:install ai",
+      "description": "Publishes default AI configuration into app/Config/Ai.php."
+    }
+  ]
+}
