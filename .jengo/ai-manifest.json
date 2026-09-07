@@ -19,31 +19,37 @@
     {
       "name": "openai",
       "class": "Jengo\\Ai\\Drivers\\OpenAiDriver",
+      "default_model": "gpt-4o-mini",
       "description": "OpenAI driver supporting GPT-4o, GPT-4o-mini, o1, o3-mini, structured JSON outputs, tool calling, streaming, and vector embeddings."
     },
     {
       "name": "anthropic",
       "class": "Jengo\\Ai\\Drivers\\AnthropicDriver",
+      "default_model": "claude-3-5-sonnet-20241022",
       "description": "Anthropic Claude driver supporting Claude 3.5 Sonnet, Claude 3.5 Haiku, multi-turn conversations, tool calling, and token streaming."
     },
     {
       "name": "gemini",
       "class": "Jengo\\Ai\\Drivers\\GeminiDriver",
+      "default_model": "gemini-2.0-flash",
       "description": "Google Gemini driver supporting Gemini 2.0 Flash, Gemini 1.5 Pro, structured JSON responses, tools, streaming, and text-embedding-004."
     },
     {
       "name": "deepseek",
       "class": "Jengo\\Ai\\Drivers\\DeepSeekDriver",
+      "default_model": "deepseek-chat",
       "description": "DeepSeek driver supporting DeepSeek V3 and DeepSeek R1 reasoning models with OpenAI-compatible API protocol."
     },
     {
       "name": "groq",
       "class": "Jengo\\Ai\\Drivers\\GroqDriver",
+      "default_model": "llama-3.3-70b-versatile",
       "description": "Groq LPU ultra-fast inference driver for Llama 3.3 70B and Mixtral models."
     },
     {
       "name": "ollama",
       "class": "Jengo\\Ai\\Drivers\\OllamaDriver",
+      "default_model": "llama3.2",
       "description": "Local self-hosted LLM driver for Ollama (Llama 3.2, Mistral, Qwen, DeepSeek-R1, Nomic Embed)."
     },
     {
@@ -52,6 +58,23 @@
       "description": "In-memory test double driver that intercepts all generation, streaming, and embedding calls for zero-cost testing."
     }
   ],
+  "configuration": {
+    "file": "app/Config/Ai.php",
+    "env_prefix": "ai",
+    "dot_notation_examples": [
+      "ai.default = 'openai'",
+      "ai.providers.openai.key = 'sk-...'",
+      "ai.providers.openai.model = 'gpt-4o-mini'",
+      "ai.providers.anthropic.key = 'sk-ant-...'",
+      "ai.providers.gemini.key = 'AIzaSy...'",
+      "ai.providers.deepseek.key = 'sk-...'",
+      "ai.providers.groq.key = 'gsk_...'",
+      "ai.providers.ollama.base_url = 'http://localhost:11434'",
+      "ai.defaults.temperature = 0.7",
+      "ai.defaults.max_tokens = 2048",
+      "ai.defaults.max_steps = 5"
+    ]
+  },
   "tool_calling": {
     "tool_class": "Jengo\\Ai\\Support\\Tool",
     "tool_call_class": "Jengo\\Ai\\Support\\ToolCall",
@@ -92,6 +115,18 @@
       "VectorMath::topK(array $queryVector, array $candidates, int $k = 5): array",
       "VectorMath::chunkText(string $text, int $chunkSize = 1000, int $overlap = 100): array"
     ]
+  },
+  "prompt_templates": {
+    "class": "Jengo\\Ai\\Support\\PromptTemplate",
+    "factory": "PromptTemplate::make(string $template)",
+    "methods": [
+      "$template->render(array $variables): string",
+      "$template->toMessage(array $variables, Role $role = Role::USER): Message"
+    ]
+  },
+  "custom_driver_extension": {
+    "method": "Ai::extend(string $name, Closure $callback): self",
+    "description": "Register custom AI provider drivers at runtime."
   },
   "testing": {
     "fake_class": "Jengo\\Ai\\Testing\\AiFake",

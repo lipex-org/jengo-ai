@@ -18,6 +18,7 @@ A unified, multi-provider AI SDK and Agentic Engine for **CodeIgniter 4** and th
 - 🏷️ **PHP 8 `#[AiTool]` Attribute Auto-Discovery**: Automatically convert any PHP service class into LLM tools via attributes.
 - ⚡ **Real-Time Token Streaming**: Built-in Server-Sent Events (SSE) response generator for real-time frontend streaming (Inertia.js, Vue, React, HTMX).
 - 🧭 **Vector Embeddings & Semantic Search**: Generate embeddings, batch vectors, and compute cosine similarity / top-K ranking (`VectorMath`).
+- 📝 **Parameterized Prompt Templates**: Reusable prompt templates with variable interpolation (`PromptTemplate`).
 - 🧪 **Zero-Cost Testing Double (`Ai::fake()`)**: Fully featured in-memory mock double with prompt assertions, model assertions, sequence queuing, and tool verification.
 
 ---
@@ -96,7 +97,7 @@ $summary = Ai::prompt('Summarize this quarterly financial report in 3 bullets: .
 ```php
 $response = Ai::chat([
     ['role' => 'system', 'content' => 'You are a senior CodeIgniter 4 architect.'],
-    ['role' => 'user', 'content' => 'How do I optimize FrankerPHP worker mode?'],
+    ['role' => 'user', 'content' => 'How do I optimize FrankenPHP worker mode?'],
 ])
 ->temperature(0.2)
 ->maxTokens(1500)
@@ -127,6 +128,12 @@ $math = Ai::driver('deepseek')
     ->prompt('Solve this optimization proof...')
     ->text();
 
+// Groq Ultra-Fast Llama 3.3
+$fast = Ai::driver('groq')
+    ->model('llama-3.3-70b-versatile')
+    ->prompt('Summarize the text...')
+    ->text();
+
 // Local Ollama (Offline, zero cost)
 $tags = Ai::driver('ollama')
     ->model('llama3.2')
@@ -151,7 +158,7 @@ $lead = Ai::prompt('Extract lead info from email: John Doe, VP at Acme Corp, joh
     ])
     ->asArray();
 
-// Returns:
+// Returns typed PHP array:
 // [
 //     'name' => 'John Doe',
 //     'company' => 'Acme Corp',
@@ -159,6 +166,13 @@ $lead = Ai::prompt('Extract lead info from email: John Doe, VP at Acme Corp, joh
 //     'phone' => '+1-555-0199',
 //     'is_decision_maker' => true
 // ]
+```
+
+Or decode into a `stdClass` object:
+
+```php
+$leadObj = Ai::prompt('...')->schema([...])->asObject();
+echo $leadObj->company;
 ```
 
 ---
@@ -278,6 +292,24 @@ $candidates = [
     'doc_2' => $vectorB,
 ];
 $topResults = VectorMath::topK($queryVector, $candidates, k: 5);
+```
+
+---
+
+## 📝 Parameterized Prompt Templates
+
+```php
+use Jengo\Ai\Support\PromptTemplate;
+use Jengo\Ai\Ai;
+
+$template = PromptTemplate::make('Translate the following text into {target_lang}: "{text}"');
+
+$prompt = $template->render([
+    'target_lang' => 'Swahili',
+    'text'        => 'Welcome to the Jengo Framework',
+]);
+
+$response = Ai::prompt($prompt)->text();
 ```
 
 ---
