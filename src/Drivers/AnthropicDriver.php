@@ -154,11 +154,11 @@ class AnthropicDriver extends AbstractDriver
 
         // Tools
         if ($request->hasTools()) {
-            $body['tools'] = array_map(fn($tool) => [
+            $body['tools'] = array_values(array_map(fn($tool) => [
                 'name'         => $tool->getName(),
                 'description'  => $tool->getDescription(),
                 'input_schema' => $tool->getParametersSchema(),
-            ], $request->getTools());
+            ], $request->getTools()));
         }
 
         return array_merge($body, $request->getOptions());

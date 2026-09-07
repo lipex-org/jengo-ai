@@ -269,12 +269,33 @@ class AiRequest
         $driver = $client->driver($this->driverName);
 
         $step = 0;
+        $allExecutedToolCalls = [];
+        $totalPromptTokens = 0;
+        $totalCompletionTokens = 0;
 
         while ($step < $this->maxSteps) {
             $step++;
             $response = $driver->generate($this);
 
+            $totalPromptTokens += $response->usage->promptTokens;
+            $totalCompletionTokens += $response->usage->completionTokens;
+
             if (!$response->hasToolCalls() || empty($this->tools)) {
+                if (!empty($allExecutedToolCalls) && empty($response->toolCalls())) {
+                    return new ChatResponse(
+                        content: $response->text(),
+                        usage: new \Jengo\Ai\Responses\Usage(
+                            promptTokens: $totalPromptTokens,
+                            completionTokens: $totalCompletionTokens,
+                            totalTokens: $totalPromptTokens + $totalCompletionTokens
+                        ),
+                        finishReason: $response->finishReason(),
+                        toolCalls: $allExecutedToolCalls,
+                        rawResponse: $response->raw(),
+                        model: $response->model,
+                        id: $response->id
+                    );
+                }
                 return $response;
             }
 
@@ -283,6 +304,7 @@ class AiRequest
 
             // Execute each tool call and record tool result messages
             foreach ($response->toolCalls() as $toolCall) {
+                $allExecutedToolCalls[] = $toolCall;
                 if (isset($this->tools[$toolCall->name])) {
                     $tool = $this->tools[$toolCall->name];
                     try {
@@ -301,7 +323,27 @@ class AiRequest
             }
         }
 
-        return $driver->generate($this);
+        $finalResponse = $driver->generate($this);
+        $totalPromptTokens += $finalResponse->usage->promptTokens;
+        $totalCompletionTokens += $finalResponse->usage->completionTokens;
+
+        if (!empty($allExecutedToolCalls) && empty($finalResponse->toolCalls())) {
+            return new ChatResponse(
+                content: $finalResponse->text(),
+                usage: new \Jengo\Ai\Responses\Usage(
+                    promptTokens: $totalPromptTokens,
+                    completionTokens: $totalCompletionTokens,
+                    totalTokens: $totalPromptTokens + $totalCompletionTokens
+                ),
+                finishReason: $finalResponse->finishReason(),
+                toolCalls: $allExecutedToolCalls,
+                rawResponse: $finalResponse->raw(),
+                model: $finalResponse->model,
+                id: $finalResponse->id
+            );
+        }
+
+        return $finalResponse;
     }
 
     /**

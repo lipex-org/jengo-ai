@@ -182,10 +182,7 @@ class OpenAiDriver extends AbstractDriver
 
         // Tools
         if ($request->hasTools()) {
-            $body['tools'] = array_map(fn($tool) => [
-                'type'     => 'function',
-                'function' => $tool->toArray(),
-            ], $request->getTools());
+            $body['tools'] = array_values(array_map(fn($tool) => $tool->toArray(), $request->getTools()));
             $body['tool_choice'] = 'auto';
         }
 

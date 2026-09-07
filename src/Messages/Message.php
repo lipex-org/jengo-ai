@@ -6,6 +6,7 @@ namespace Jengo\Ai\Messages;
 
 use Jengo\Ai\Contracts\MessageInterface;
 use Jengo\Ai\Enums\Role;
+use Jengo\Ai\Support\ToolCall;
 
 class Message implements MessageInterface
 {
@@ -53,7 +54,7 @@ class Message implements MessageInterface
     {
         $data = [
             'role'    => $this->role->value,
-            'content' => $this->content,
+            'content' => is_array($this->content) ? json_encode($this->content, JSON_UNESCAPED_SLASHES) : (string) $this->content,
         ];
 
         if ($this->name !== null) {
@@ -61,7 +62,12 @@ class Message implements MessageInterface
         }
 
         if ($this->toolCalls !== null) {
-            $data['tool_calls'] = $this->toolCalls;
+            $data['tool_calls'] = array_values(array_map(function ($tc) {
+                if ($tc instanceof ToolCall) {
+                    return $tc->toArray();
+                }
+                return $tc;
+            }, $this->toolCalls));
         }
 
         if ($this->toolCallId !== null) {
