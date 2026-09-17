@@ -140,8 +140,21 @@ class AnthropicDriver extends AbstractDriver
             $body['stream'] = true;
         }
 
-        if ($request->getSystemPrompt() !== null) {
-            $body['system'] = $request->getSystemPrompt();
+        $systemPrompt = $request->getSystemPrompt();
+        if ($systemPrompt === null) {
+            $systemParts = [];
+            foreach ($request->getMessages() as $msg) {
+                if ($msg->getRole() === Role::SYSTEM) {
+                    $systemParts[] = (string) $msg->getContent();
+                }
+            }
+            if (!empty($systemParts)) {
+                $systemPrompt = implode("\n\n", $systemParts);
+            }
+        }
+
+        if ($systemPrompt !== null) {
+            $body['system'] = $systemPrompt;
         }
 
         if ($request->getTemperature() !== null) {
@@ -176,22 +189,27 @@ class AnthropicDriver extends AbstractDriver
             $content = $msg->getContent();
 
             if ($role === Role::SYSTEM) {
-                // If a system message is in messages list, merge into system prompt if needed
+                // System message handled in buildRequestBody
                 continue;
             }
 
             if ($role === Role::TOOL) {
                 $rawMsg = $msg->toArray();
-                $messages[] = [
-                    'role'    => 'user',
-                    'content' => [
-                        [
-                            'type'         => 'tool_result',
-                            'tool_use_id'  => $rawMsg['tool_call_id'] ?? '',
-                            'content'      => is_array($content) ? json_encode($content) : (string) $content,
-                        ],
-                    ],
+                $toolBlock = [
+                    'type'        => 'tool_result',
+                    'tool_use_id' => $rawMsg['tool_call_id'] ?? '',
+                    'content'     => is_array($content) ? json_encode($content) : (string) $content,
                 ];
+
+                $lastIndex = count($messages) - 1;
+                if ($lastIndex >= 0 && $messages[$lastIndex]['role'] === 'user' && is_array($messages[$lastIndex]['content'])) {
+                    $messages[$lastIndex]['content'][] = $toolBlock;
+                } else {
+                    $messages[] = [
+                        'role'    => 'user',
+                        'content' => [$toolBlock],
+                    ];
+                }
                 continue;
             }
 

@@ -136,6 +136,9 @@ class OllamaDriver extends AbstractDriver
         }
 
         foreach ($request->getMessages() as $msg) {
+            if ($msg->getRole() === \Jengo\Ai\Enums\Role::SYSTEM) {
+                continue;
+            }
             $messages[] = $msg->toArray();
         }
 

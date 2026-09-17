@@ -26,4 +26,14 @@ class SchemaValidationException extends AiException
             ['missing_fields' => $missingFields, 'payload' => $payload]
         );
     }
+
+    public function getMissingFields(): array
+    {
+        return $this->context['missing_fields'] ?? [];
+    }
+
+    public function getPayload(): array
+    {
+        return $this->context['payload'] ?? [];
+    }
 }

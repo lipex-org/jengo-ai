@@ -230,7 +230,29 @@ class AiRequest
             }
 
             $tool->handler(function (...$args) use ($instance, $method) {
-                return $method->invokeArgs($instance, $args);
+                $orderedArgs = [];
+                foreach ($method->getParameters() as $param) {
+                    $name = $param->getName();
+                    if (array_key_exists($name, $args)) {
+                        $val = $args[$name];
+                        if ($param->hasType()) {
+                            $type = $param->getType();
+                            if ($type instanceof ReflectionNamedType) {
+                                $val = match ($type->getName()) {
+                                    'int'     => is_numeric($val) ? (int) $val : $val,
+                                    'float'   => is_numeric($val) ? (float) $val : $val,
+                                    'bool'    => is_string($val) ? filter_var($val, FILTER_VALIDATE_BOOLEAN) : (bool) $val,
+                                    'string'  => is_scalar($val) ? (string) $val : $val,
+                                    default   => $val,
+                                };
+                            }
+                        }
+                        $orderedArgs[$name] = $val;
+                    } elseif ($param->isDefaultValueAvailable()) {
+                        $orderedArgs[$name] = $param->getDefaultValue();
+                    }
+                }
+                return $method->invokeArgs($instance, $orderedArgs);
             });
 
             $this->tools[$toolName] = $tool;
@@ -403,7 +425,19 @@ class AiRequest
 
     public function getSystemPrompt(): ?string
     {
-        return $this->systemPrompt;
+        if ($this->systemPrompt !== null) {
+            return $this->systemPrompt;
+        }
+
+        $systemParts = [];
+        foreach ($this->messages as $msg) {
+            if ($msg->getRole() === Role::SYSTEM) {
+                $content = $msg->getContent();
+                $systemParts[] = is_array($content) ? json_encode($content) : (string) $content;
+            }
+        }
+
+        return !empty($systemParts) ? implode("\n\n", $systemParts) : null;
     }
 
     public function getModel(): ?string

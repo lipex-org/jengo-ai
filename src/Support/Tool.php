@@ -111,6 +111,31 @@ class Tool implements ToolInterface
             throw new \RuntimeException("Tool [{$this->name}] has no execution handler defined.");
         }
 
+        // If arguments are associative, filter out unknown parameters to prevent PHP 8 unknown named parameter errors
+        $isAssociative = !empty($arguments) && array_keys($arguments) !== range(0, count($arguments) - 1);
+        if ($isAssociative) {
+            $ref = new \ReflectionFunction($this->handler);
+            $hasVariadic = false;
+            $allowed = [];
+            foreach ($ref->getParameters() as $param) {
+                if ($param->isVariadic()) {
+                    $hasVariadic = true;
+                    break;
+                }
+                $allowed[$param->getName()] = true;
+            }
+
+            if (!$hasVariadic) {
+                $filtered = [];
+                foreach ($arguments as $key => $val) {
+                    if (isset($allowed[$key])) {
+                        $filtered[$key] = $val;
+                    }
+                }
+                $arguments = $filtered;
+            }
+        }
+
         return ($this->handler)(...$arguments);
     }
 

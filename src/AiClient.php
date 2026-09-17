@@ -120,6 +120,10 @@ class AiClient
      */
     public function embedMany(array $texts, ?string $model = null, ?string $driver = null): array
     {
+        if (empty($texts)) {
+            return [];
+        }
+
         $response = $this->driver($driver)->embed($texts, $model);
         return $response->all();
     }
@@ -176,6 +180,8 @@ class AiClient
      */
     protected function createDriver(string $name): DriverInterface
     {
+        $name = strtolower(trim($name));
+
         if (isset($this->customCreators[$name])) {
             return ($this->customCreators[$name])($this->config);
         }

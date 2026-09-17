@@ -71,4 +71,37 @@ class VectorMathTest extends TestCase
         $this->assertSame('doc_c', $keys[0]);
         $this->assertSame('doc_a', $keys[1]);
     }
+
+    public function testZeroMagnitudeAndMismatchedVectors(): void
+    {
+        // Zero magnitude
+        $zero = [0.0, 0.0, 0.0];
+        $vec = [1.0, 2.0, 3.0];
+        $this->assertSame(0.0, VectorMath::cosineSimilarity($zero, $vec));
+        $this->assertSame(0.0, VectorMath::cosineSimilarity($vec, $zero));
+
+        // Mismatched dimensions
+        $this->assertSame(0.0, VectorMath::cosineSimilarity([1.0], [1.0, 2.0]));
+        $this->assertSame(0.0, VectorMath::dotProduct([1.0], [1.0, 2.0]));
+        $this->assertSame(0.0, VectorMath::euclideanDistance([1.0], [1.0, 2.0]));
+    }
+
+    public function testChunkTextEdgeCases(): void
+    {
+        // Empty string
+        $this->assertSame([], VectorMath::chunkText(''));
+        $this->assertSame([], VectorMath::chunkText('   '));
+
+        // Short string fits in one chunk
+        $short = 'Hello world';
+        $this->assertSame(['Hello world'], VectorMath::chunkText($short, chunkSize: 50));
+
+        // Long text chunking with overlap
+        $long = str_repeat('ABCDEFGHIJ ', 20); // 220 chars
+        $chunks = VectorMath::chunkText($long, chunkSize: 50, overlap: 10);
+        $this->assertGreaterThan(1, count($chunks));
+        foreach ($chunks as $c) {
+            $this->assertLessThanOrEqual(50, mb_strlen($c));
+        }
+    }
 }

@@ -155,4 +155,27 @@ class ResponsesAndMessagesTest extends TestCase
         $this->assertSame(3, $json['dimensions']);
         $this->assertSame(1, $json['count']);
     }
+
+    public function testStreamResponseEachAndIterator(): void
+    {
+        $generator = (function (): Generator {
+            yield 'Alpha ';
+            yield 'Beta ';
+            yield 'Gamma';
+        })();
+
+        $stream = new StreamResponse($generator, model: 'claude-3-5-sonnet');
+
+        $chunks = [];
+        $accumulatedHistory = [];
+        $final = $stream->each(function (string $chunk, string $acc) use (&$chunks, &$accumulatedHistory) {
+            $chunks[] = $chunk;
+            $accumulatedHistory[] = $acc;
+        });
+
+        $this->assertSame('Alpha Beta Gamma', $final);
+        $this->assertSame(['Alpha ', 'Beta ', 'Gamma'], $chunks);
+        $this->assertSame(['Alpha ', 'Alpha Beta ', 'Alpha Beta Gamma'], $accumulatedHistory);
+        $this->assertSame('Alpha Beta Gamma', $stream->text());
+    }
 }

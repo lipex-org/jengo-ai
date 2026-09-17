@@ -36,7 +36,7 @@ class VectorMath
             return 0.0;
         }
 
-        return $dotProduct / (sqrt($normA) * sqrt($normB));
+        return max(-1.0, min(1.0, $dotProduct / (sqrt($normA) * sqrt($normB))));
     }
 
     /**
@@ -109,6 +109,10 @@ class VectorMath
     public static function chunkText(string $text, int $chunkSize = 1000, int $overlap = 100): array
     {
         $text = trim($text);
+        if ($text === '') {
+            return [];
+        }
+
         if (mb_strlen($text) <= $chunkSize) {
             return [$text];
         }

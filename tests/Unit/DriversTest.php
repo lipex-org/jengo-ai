@@ -93,4 +93,39 @@ class DriversTest extends TestCase
 
         unset($_ENV['ai.providers.openai.key'], $_ENV['ai.providers.openai.model'], $_ENV['ai.defaults.temperature']);
     }
+
+    public function testDriverNameCaseInsensitivity(): void
+    {
+        $client = new AiClient();
+        $driver1 = $client->driver('  OpenAI  ');
+        $this->assertInstanceOf(OpenAiDriver::class, $driver1);
+
+        $driver2 = $client->driver('ANTHROPIC');
+        $this->assertInstanceOf(AnthropicDriver::class, $driver2);
+    }
+
+    public function testUnsupportedDriverThrowsException(): void
+    {
+        $client = new AiClient();
+        $this->expectException(\Jengo\Ai\Exceptions\DriverException::class);
+        $this->expectExceptionMessage('Unsupported AI driver: [quantum_model]');
+
+        $client->driver('quantum_model');
+    }
+
+    public function testEmbedManyWithEmptyArrayReturnsEmptyArray(): void
+    {
+        $client = new AiClient();
+        $results = $client->embedMany([]);
+        $this->assertSame([], $results);
+    }
+
+    public function testAnthropicEmbedThrowsUnsupportedException(): void
+    {
+        $driver = new AnthropicDriver(['key' => 'dummy']);
+        $this->expectException(\Jengo\Ai\Exceptions\DriverException::class);
+        $this->expectExceptionMessage('Anthropic does not provide a native vector embeddings endpoint');
+
+        $driver->embed(['some text']);
+    }
 }

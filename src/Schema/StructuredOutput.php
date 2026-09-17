@@ -17,13 +17,15 @@ class StructuredOutput
     {
         $cleaned = trim($text);
 
-        // Strip markdown code fences (e.g. ```json ... ```)
-        if (str_starts_with($cleaned, '```')) {
+        // 1. Extract markdown code fences if present anywhere in text
+        if (preg_match('/```(?:json)?\s*([\s\S]*?)\s*```/i', $cleaned, $matches)) {
+            $cleaned = trim($matches[1]);
+        } elseif (str_starts_with($cleaned, '```')) {
             $cleaned = preg_replace('/^```(?:json)?\s*|\s*```$/i', '', $cleaned);
             $cleaned = trim((string) $cleaned);
         }
 
-        // Locate outermost JSON { ... } or [ ... ]
+        // 2. Locate outermost JSON { ... } or [ ... ]
         if (!str_starts_with($cleaned, '{') && !str_starts_with($cleaned, '[')) {
             $firstBrace = strpos($cleaned, '{');
             $firstBracket = strpos($cleaned, '[');
@@ -43,6 +45,15 @@ class StructuredOutput
         }
 
         $decoded = json_decode($cleaned, true);
+
+        // 3. Fallback: sanitize trailing commas produced by LLMs (e.g. {"a": 1,})
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+            $sanitized = preg_replace('/,\s*([}\]])/', '$1', $cleaned);
+            if (is_string($sanitized)) {
+                $decoded = json_decode($sanitized, true);
+            }
+        }
+
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
             throw SchemaValidationException::invalidJson($text, json_last_error_msg());
         }

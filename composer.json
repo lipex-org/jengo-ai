@@ -11,8 +11,8 @@
   ],
   "require": {
     "php": "^8.2",
-    "codeigniter4/framework": "^4.6",
-    "jengo/base": "^1.1|dev-main"
+    "codeigniter4/framework": "^4.6|^4.7",
+    "jengo/base": "^1.1 || dev-main"
   },
   "suggest": {
     "jengo/schema": "Required for building autonomous database tools and schema-driven RAG pipelines"

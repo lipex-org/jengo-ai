@@ -96,4 +96,63 @@ class AiFakeTest extends TestCase
 
         $fake->assertCount(0); // embed called directly on driver
     }
+
+    public function testAiFakeModelAndDriverAssertionsAndNothingSent(): void
+    {
+        $fake = Ai::fake('Ok');
+        $fake->assertNothingSent();
+
+        Ai::driver('openai')->model('gpt-4o')->prompt('Test message')->text();
+
+        $fake->assertCount(1);
+        $fake->assertModel('gpt-4o');
+        $fake->assertPromptSent('Test message');
+    }
+
+    public function testAiFakeDefaultFallbackResponse(): void
+    {
+        $fake = Ai::fake();
+        $fake->defaultResponse('Fallback message');
+
+        $r1 = Ai::prompt('Q1')->text();
+        $r2 = Ai::prompt('Q2')->text();
+
+        $this->assertSame('Fallback message', $r1);
+        $this->assertSame('Fallback message', $r2);
+        $fake->assertCount(2);
+    }
+
+    public function testAiFakeClosureResponse(): void
+    {
+        $fake = Ai::fake();
+        $fake->push(function (AiRequest $request) {
+            return 'Custom dynamic reply for: ' . $request->getMessages()[0]->getContent();
+        });
+
+        $reply = Ai::prompt('What time is it?')->text();
+        $this->assertSame('Custom dynamic reply for: What time is it?', $reply);
+    }
+
+    public function testAiFakeResetClearsState(): void
+    {
+        $fake = Ai::fake('Initial response');
+        Ai::prompt('Q')->text();
+        $fake->assertCount(1);
+
+        $fake->reset();
+        $fake->assertNothingSent();
+        $this->assertEmpty($fake->recorded());
+    }
+
+    public function testAiFakeGeneratesDeterministicEmbeddingWhenQueueEmpty(): void
+    {
+        $fake = Ai::fake();
+        $vec1 = Ai::embed('Hello Jengo');
+        $vec2 = Ai::embed('Hello Jengo');
+        $vec3 = Ai::embed('Different text');
+
+        $this->assertCount(16, $vec1);
+        $this->assertSame($vec1, $vec2);
+        $this->assertNotSame($vec1, $vec3);
+    }
 }

@@ -97,4 +97,48 @@ class StructuredOutputTest extends TestCase
         $this->assertSame('Acme', $obj->company);
         $this->assertSame(150, $obj->employees);
     }
+
+    public function testStructuredOutputExtractsWithPrecedingNarrativeAndFences(): void
+    {
+        $raw = "Certainly! Below is the requested JSON payload:\n\n```json\n{\n  \"status\": \"active\",\n  \"count\": 42\n}\n```\n\nPlease let me know if you need anything else!";
+        $extracted = StructuredOutput::extract($raw);
+
+        $this->assertSame(['status' => 'active', 'count' => 42], $extracted);
+    }
+
+    public function testStructuredOutputToleratesTrailingCommas(): void
+    {
+        $raw = '{"name": "Alice", "tags": ["admin", "staff",],}';
+        $extracted = StructuredOutput::extract($raw);
+
+        $this->assertSame('Alice', $extracted['name']);
+        $this->assertSame(['admin', 'staff'], $extracted['tags']);
+    }
+
+    public function testStructuredOutputExtractsRootJsonArray(): void
+    {
+        $raw = "Here are the results: [{\"id\": 1}, {\"id\": 2}]";
+        $extracted = StructuredOutput::extract($raw);
+
+        $this->assertCount(2, $extracted);
+        $this->assertSame(1, $extracted[0]['id']);
+        $this->assertSame(2, $extracted[1]['id']);
+    }
+
+    public function testStructuredOutputMissingFieldsExceptionContainsDetails(): void
+    {
+        $schema = [
+            'type'       => 'object',
+            'properties' => ['email' => ['type' => 'string']],
+            'required'   => ['email', 'password'],
+        ];
+
+        try {
+            StructuredOutput::extract('{"email": "test@example.com"}', $schema);
+            $this->fail('Expected SchemaValidationException was not thrown');
+        } catch (SchemaValidationException $e) {
+            $this->assertSame(['password'], $e->getMissingFields());
+            $this->assertArrayHasKey('email', $e->getPayload());
+        }
+    }
 }

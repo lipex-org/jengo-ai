@@ -34,4 +34,21 @@ class PromptTemplateTest extends TestCase
         $this->assertSame(Role::SYSTEM, $message->getRole());
         $this->assertSame('System prompt: Act as a developer.', $message->getContent());
     }
+
+    public function testRenderWithArrayVariable(): void
+    {
+        $template = PromptTemplate::make("Analyze the following items:\n{items}");
+        $rendered = $template->render(['items' => ['id' => 1, 'name' => 'Widget']]);
+
+        $this->assertStringContainsString('"id": 1', $rendered);
+        $this->assertStringContainsString('"name": "Widget"', $rendered);
+    }
+
+    public function testRenderLeavesUnmatchedPlaceholders(): void
+    {
+        $template = PromptTemplate::make('Hello {name}, your role is {role}.');
+        $rendered = $template->render(['name' => 'Bob']);
+
+        $this->assertSame('Hello Bob, your role is {role}.', $rendered);
+    }
 }

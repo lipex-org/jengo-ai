@@ -166,10 +166,23 @@ class GeminiDriver extends AbstractDriver
             'contents' => $this->formatContents($request),
         ];
 
-        if ($request->getSystemPrompt() !== null) {
+        $systemPrompt = $request->getSystemPrompt();
+        if ($systemPrompt === null) {
+            $systemParts = [];
+            foreach ($request->getMessages() as $msg) {
+                if ($msg->getRole() === Role::SYSTEM) {
+                    $systemParts[] = (string) $msg->getContent();
+                }
+            }
+            if (!empty($systemParts)) {
+                $systemPrompt = implode("\n\n", $systemParts);
+            }
+        }
+
+        if ($systemPrompt !== null) {
             $body['system_instruction'] = [
                 'parts' => [
-                    ['text' => $request->getSystemPrompt()],
+                    ['text' => $systemPrompt],
                 ],
             ];
         }
@@ -230,20 +243,25 @@ class GeminiDriver extends AbstractDriver
             if ($role === Role::TOOL) {
                 $rawMsg = $msg->toArray();
                 $decodedContent = is_string($content) ? (json_decode($content, true) ?? ['result' => $content]) : $content;
-                $contents[] = [
-                    'role'  => 'user',
-                    'parts' => [
-                        [
-                            'functionResponse' => [
-                                'name'     => $rawMsg['name'] ?? 'tool_result',
-                                'response' => [
-                                    'name'    => $rawMsg['name'] ?? 'tool_result',
-                                    'content' => $decodedContent,
-                                ],
-                            ],
+                $toolPart = [
+                    'functionResponse' => [
+                        'name'     => $rawMsg['name'] ?? 'tool_result',
+                        'response' => [
+                            'name'    => $rawMsg['name'] ?? 'tool_result',
+                            'content' => $decodedContent,
                         ],
                     ],
                 ];
+
+                $lastIndex = count($contents) - 1;
+                if ($lastIndex >= 0 && $contents[$lastIndex]['role'] === 'user') {
+                    $contents[$lastIndex]['parts'][] = $toolPart;
+                } else {
+                    $contents[] = [
+                        'role'  => 'user',
+                        'parts' => [$toolPart],
+                    ];
+                }
                 continue;
             }
 

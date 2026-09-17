@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "53ae9ae5c1b19d7df1f2ca0e0e5a640e",
+    "content-hash": "4b58b081d50458779a82a06c27107afa",
     "packages": [
         {
             "name": "codeigniter4/framework",
@@ -135,11 +135,11 @@
             "dist": {
                 "type": "path",
                 "url": "../base",
-                "reference": "443085e21c503662df8b067fce03215a207ffe16"
+                "reference": "543ac34aedfc15f43d9d4943ca8d40029639471e"
             },
             "require": {
                 "codeigniter4/framework": "^4.7",
-                "gilads-otiannoh254/inertia-protocol": "*@dev",
+                "gilads-otiannoh254/inertia-protocol": "^0.0",
                 "psy/psysh": "^0.12.24",
                 "sqids/sqids": "^0.5.0"
             },
