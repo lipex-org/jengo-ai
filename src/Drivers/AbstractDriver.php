@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Jengo\Ai\Drivers;
 
+use Config\Services;
 use Generator;
 use Jengo\Ai\Contracts\DriverInterface;
 use Jengo\Ai\Exceptions\AuthenticationException;
 use Jengo\Ai\Exceptions\DriverException;
 use Jengo\Ai\Exceptions\RateLimitException;
+use Throwable;
 
 abstract class AbstractDriver implements DriverInterface
 {
@@ -51,46 +53,50 @@ abstract class AbstractDriver implements DriverInterface
 
         $payload = !empty($body) ? (string) json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : '{}';
 
-        $defaultHeaders = [
-            'Content-Type: application/json',
-            'Accept: application/json',
+        $normalizedHeaders = [
+            'Content-Type' => 'application/json',
+            'Accept'       => 'application/json',
         ];
 
-        $allHeaders = array_merge($defaultHeaders, $headers);
+        foreach ($headers as $key => $val) {
+            if (is_int($key)) {
+                $parts = explode(':', (string) $val, 2);
+                if (count($parts) === 2) {
+                    $normalizedHeaders[trim($parts[0])] = trim($parts[1]);
+                }
+            } else {
+                $normalizedHeaders[$key] = (string) $val;
+            }
+        }
 
         while (true) {
-            $ch = curl_init();
-            curl_setopt_array($ch, [
-                CURLOPT_URL            => $url,
-                CURLOPT_POST           => true,
-                CURLOPT_POSTFIELDS     => $payload,
-                CURLOPT_HTTPHEADER     => $allHeaders,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT        => $timeout,
-                CURLOPT_CONNECTTIMEOUT => 10,
-                CURLOPT_SSL_VERIFYPEER => true,
-                CURLOPT_SSL_VERIFYHOST => 2,
-            ]);
+            try {
+                $client = Services::curlrequest([
+                    'timeout'         => (float) $timeout,
+                    'connect_timeout' => 10.0,
+                    'http_errors'     => false,
+                ]);
 
-            $rawResponse = curl_exec($ch);
-            $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlError = curl_error($ch);
-            $curlErrno = curl_errno($ch);
-            curl_close($ch);
+                $response = $client->post($url, [
+                    'headers' => $normalizedHeaders,
+                    'body'    => $payload,
+                ]);
 
-            if ($curlErrno !== 0) {
+                $httpCode    = $response->getStatusCode();
+                $rawResponse = (string) $response->getBody();
+            } catch (Throwable $e) {
                 if ($attempt < $maxRetries) {
                     $attempt++;
                     usleep((int) (pow(2, $attempt) * 100000)); // Exponential backoff (0.2s, 0.4s...)
                     continue;
                 }
-                throw DriverException::networkError("cURL Error ({$curlErrno}): {$curlError}");
+                throw DriverException::networkError("cURL Request Error: " . $e->getMessage());
             }
 
             if ($httpCode >= 200 && $httpCode < 300) {
-                $decoded = json_decode((string) $rawResponse, true);
+                $decoded = json_decode($rawResponse, true);
                 if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
-                    throw DriverException::invalidResponse("Invalid JSON response from driver: " . substr((string) $rawResponse, 0, 200));
+                    throw DriverException::invalidResponse("Invalid JSON response from driver: " . substr($rawResponse, 0, 200));
                 }
                 return $decoded;
             }
@@ -102,12 +108,12 @@ abstract class AbstractDriver implements DriverInterface
                     usleep((int) (pow(2, $attempt) * 200000));
                     continue;
                 }
-                throw RateLimitException::providerLimit("Rate limit exceeded (HTTP 429): " . (string) $rawResponse);
+                throw RateLimitException::providerLimit("Rate limit exceeded (HTTP 429): " . $rawResponse);
             }
 
             // Handle Authentication Failure (401, 403)
             if ($httpCode === 401 || $httpCode === 403) {
-                throw AuthenticationException::invalidKey("Authentication failed (HTTP {$httpCode}): " . (string) $rawResponse);
+                throw AuthenticationException::invalidKey("Authentication failed (HTTP {$httpCode}): " . $rawResponse);
             }
 
             // Transient server errors (500, 502, 503, 504)
@@ -117,12 +123,15 @@ abstract class AbstractDriver implements DriverInterface
                 continue;
             }
 
-            throw DriverException::apiError("API request to {$url} failed with HTTP {$httpCode}: " . (string) $rawResponse, $httpCode);
+            throw DriverException::apiError("API request to {$url} failed with HTTP {$httpCode}: " . $rawResponse, $httpCode);
         }
     }
 
     /**
      * Execute a streaming HTTP request yielding raw SSE data lines or chunks.
+     * Note: Low-level cURL multi-handle is retained here as CodeIgniter's CURLRequest
+     * buffers the complete HTTP response body synchronously and does not support
+     * generator-driven chunked SSE streaming.
      *
      * @param array<string, string> $headers
      * @param array<string, mixed> $body
