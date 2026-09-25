@@ -11,8 +11,8 @@
   ],
   "require": {
     "php": "^8.2",
-    "codeigniter4/framework": "^4.6|^4.7",
-    "jengo/base": "^1.1 || dev-main"
+    "codeigniter4/framework": "^4.7",
+    "jengo/base": "^1.1"
   },
   "suggest": {
     "jengo/schema": "Required for building autonomous database tools and schema-driven RAG pipelines"
@@ -20,19 +20,10 @@
   "require-dev": {
     "phpunit/phpunit": "^11.5"
   },
-  "repositories": [
-    {
-      "type": "path",
-      "url": "../base"
-    }
-  ],
   "autoload": {
     "psr-4": {
       "Jengo\\Ai\\": "src/"
-    },
-    "files": [
-      "src/Helpers/ai_helper.php"
-    ]
+    }
   },
   "autoload-dev": {
     "psr-4": {
