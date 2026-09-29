@@ -57,13 +57,15 @@ class AiFacadeTest extends TestCase
 
     public function testAiHelperFunction(): void
     {
-        $client = ai();
+        require_once dirname(__DIR__, 2) . '/src/Helpers/ai_helper.php';
+
+        $client = \ai();
         $this->assertInstanceOf(AiClient::class, $client);
 
-        $promptReq = ai('Quick question');
+        $promptReq = \ai('Quick question');
         $this->assertInstanceOf(AiRequest::class, $promptReq);
 
-        $chatReq = ai([['role' => 'user', 'content' => 'Hello']]);
+        $chatReq = \ai([['role' => 'user', 'content' => 'Hello']]);
         $this->assertInstanceOf(AiRequest::class, $chatReq);
     }
 }
