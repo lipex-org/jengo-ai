@@ -1,8 +1,22 @@
-# Jengo AI
+<p align="center">
+  <a href="https://lipex-org.github.io/jengophp.com/">
+    <img src="https://raw.githubusercontent.com/lipex-org/docs/main/public/logo-full.png" width="220" alt="Jengo Logo">
+  </a>
+</p>
 
-An enterprise-grade, multi-provider generative AI SDK, autonomous agent engine, and vector search toolkit for CodeIgniter 4 and the Jengo Framework.
+<h1 align="center">Jengo AI</h1>
 
-Documentation: https://lipex-org.github.io/jengophp.com/packages/ai
+<p align="center">
+  <strong>An enterprise-grade, multi-provider generative AI SDK, autonomous agent engine, and vector search toolkit for CodeIgniter 4 and the Jengo Framework.</strong>
+</p>
+
+<p align="center">
+  <a href="https://lipex-org.github.io/jengophp.com/packages/ai"><strong>Documentation</strong></a> •
+  <a href="https://github.com/lipex-org/ai/blob/main/LICENSE"><strong>License</strong></a> •
+  <a href="https://github.com/lipex-org/ai/issues"><strong>Issues</strong></a>
+</p>
+
+---
 
 ## Installation
 
