@@ -166,4 +166,22 @@ class ToolsTest extends TestCase
         $this->assertSame(10.0, $result2['price']);
         $this->assertTrue($result2['is_exempt']);
     }
+
+    public function testToolWithContainerInjectedService(): void
+    {
+        $dummyService = new class {
+            public function getPrefix(): string { return 'INV-'; }
+        };
+        \Jengo\Base\Container\Container::getInstance()->instance(get_class($dummyService), $dummyService);
+
+        $tool = Tool::make('invoice_gen')
+            ->parameter('id', 'integer')
+            ->handler(function (int $id, $service = null) use ($dummyService): string {
+                $srv = $service ?? $dummyService;
+                return $srv->getPrefix() . $id;
+            });
+
+        $result = $tool->execute(['id' => 42]);
+        $this->assertSame('INV-42', $result);
+    }
 }

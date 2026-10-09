@@ -25,6 +25,8 @@ use ReflectionNamedType;
 
 class AiRequest
 {
+    use \Jengo\Base\Container\Traits\HasContainer;
+
     protected ?string $driverName = null;
     protected ?string $model = null;
     protected ?string $systemPrompt = null;
@@ -178,7 +180,7 @@ class AiRequest
     public function withToolsFrom(object|string $target): static
     {
         $reflection = new ReflectionClass($target);
-        $instance = is_object($target) ? $target : new $target();
+        $instance = is_object($target) ? $target : $this->make($target);
 
         foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
             $attributes = $method->getAttributes(AiTool::class);

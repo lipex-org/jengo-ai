@@ -9,6 +9,8 @@ use Jengo\Ai\Contracts\ToolInterface;
 
 class Tool implements ToolInterface
 {
+    use \Jengo\Base\Container\Traits\HasContainer;
+
     /** @var array<string, array{type: string, description: string, required: bool, enum?: array, default?: mixed}> */
     protected array $parameters = [];
     protected ?Closure $handler = null;
@@ -136,7 +138,15 @@ class Tool implements ToolInterface
             }
         }
 
-        return ($this->handler)(...$arguments);
+        if ($isAssociative && $hasVariadic) {
+            return ($this->handler)(...$arguments);
+        }
+
+        try {
+            return $this->call($this->handler, $arguments);
+        } catch (\Throwable) {
+            return ($this->handler)(...$arguments);
+        }
     }
 
     public function toArray(): array

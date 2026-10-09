@@ -22,6 +22,8 @@ use Jengo\Ai\Testing\AiFake;
 
 class AiClient
 {
+    use \Jengo\Base\Container\Traits\HasContainer;
+
     protected AiConfig $config;
 
     /** @var array<string, DriverInterface> */
@@ -183,7 +185,7 @@ class AiClient
         $name = strtolower(trim($name));
 
         if (isset($this->customCreators[$name])) {
-            return ($this->customCreators[$name])($this->config);
+            return $this->call($this->customCreators[$name], ['config' => $this->config, 'client' => $this, 'name' => $name]);
         }
 
         $providerConfig = $this->config->providers[$name] ?? [];
